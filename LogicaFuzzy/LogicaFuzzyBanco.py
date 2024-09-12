@@ -1,6 +1,7 @@
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
 
 # numpy é usado para criar intervalos de valores e definir o universo de variáveis fuzzy.
 # fuzz é usado para acessar funções de pertinência, como trimf, que define funções de pertinência triangular.
@@ -57,15 +58,55 @@ class SistemaAnaliseRiscoFuzzy:
         self.risco['medio'] = fuzz.trimf(self.risco.universe, [3, 5, 7])
         self.risco['alto'] = fuzz.trimf(self.risco.universe, [6, 8, 10])
 
+        #self.historico_credito.view()
+        #plt.show()
+
+        #self.renda_mensal.view()
+        #plt.show()
+
     def _definir_regras(self):
-
-        # ctrl.Rule Define uma regra fuzzy que relaciona variáveis de entrada (antecedente) com uma variável de saída (consequente).
-
+    # Se o histórico de crédito do cliente é "Excelente" e a dívida atual é "Baixa", então o risco é classificado como "Baixo"
         rule1 = ctrl.Rule(self.historico_credito['excelente'] & self.divida_atual['baixa'], self.risco['baixo'])
+    
+    # Se o histórico de crédito do cliente é "Ruim" e a dívida atual é "Alta", então o risco é classificado como "Alto"
         rule2 = ctrl.Rule(self.historico_credito['ruim'] & self.divida_atual['alta'], self.risco['alto'])
+
+    # Se o histórico de crédito do cliente é "Bom", a renda mensal é "Média" e a dívida atual é "Moderada", então o risco é classificado como "Médio"    
         rule3 = ctrl.Rule(self.historico_credito['bom'] & self.renda_mensal['media'] & self.divida_atual['moderada'], self.risco['medio'])
-        
-        self.regras = [rule1, rule2, rule3]
+    
+    # Se o histórico de crédito é excelente e a renda é alta, mesmo com dívida moderada, o risco é baixo
+        rule4 = ctrl.Rule(self.historico_credito['excelente'] & self.renda_mensal['alta'] & self.divida_atual['moderada'], self.risco['baixo'])
+    
+    # Se o histórico de crédito é excelente e a dívida é alta, o risco é moderado
+        rule5 = ctrl.Rule(self.historico_credito['excelente'] & self.divida_atual['alta'], self.risco['medio'])
+    
+    # Se o histórico de crédito é bom e a renda é alta, com dívida baixa, o risco é baixo
+        rule6 = ctrl.Rule(self.historico_credito['bom'] & self.renda_mensal['alta'] & self.divida_atual['baixa'], self.risco['baixo'])
+    
+    # Se o histórico de crédito é bom e a dívida é alta, o risco é alto
+        rule7 = ctrl.Rule(self.historico_credito['bom'] & self.divida_atual['alta'], self.risco['alto'])
+    
+    # Se o histórico de crédito é regular e a dívida é moderada, o risco é moderado
+        rule8 = ctrl.Rule(self.historico_credito['regular'] & self.divida_atual['moderada'], self.risco['medio'])
+    
+    # Se o histórico de crédito é regular e a dívida é alta, o risco é alto
+        rule9 = ctrl.Rule(self.historico_credito['regular'] & self.divida_atual['alta'], self.risco['alto'])
+    
+    # Se o histórico de crédito é ruim e a renda é baixa, com dívida moderada, o risco é alto
+        rule10 = ctrl.Rule(self.historico_credito['ruim'] & self.renda_mensal['baixa'] & self.divida_atual['moderada'], self.risco['alto'])
+    
+    # Se o histórico de crédito é ruim e a dívida é baixa, o risco é moderado
+        rule11 = ctrl.Rule(self.historico_credito['ruim'] & self.divida_atual['baixa'], self.risco['medio'])
+    
+    # Se o histórico de crédito é regular, a renda é alta, e a dívida é baixa, o risco é baixo
+        rule12 = ctrl.Rule(self.historico_credito['regular'] & self.renda_mensal['alta'] & self.divida_atual['baixa'], self.risco['baixo'])
+    
+    # Se o histórico de crédito é bom, a renda é baixa, e a dívida é moderada, o risco é moderado
+        rule13 = ctrl.Rule(self.historico_credito['bom'] & self.renda_mensal['baixa'] & self.divida_atual['moderada'], self.risco['medio'])
+
+    # Atribuir as regras
+        self.regras = [rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, rule12, rule13]
+
 
     def avaliar_risco(self, historico_credito_val, renda_mensal_val, divida_atual_val):
         self.simulador.input['historico_credito'] = historico_credito_val
